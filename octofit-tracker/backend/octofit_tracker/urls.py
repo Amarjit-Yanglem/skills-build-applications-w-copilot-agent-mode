@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from django.conf import settings
+from rest_framework.reverse import reverse
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -30,3 +32,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
 ]
+
+def api_root(request, format=None):
+    codespace_name = os.environ.get('CODESPACE_NAME')
+    if codespace_name:
+        base_url = f'https://{codespace_name}-8000.app.github.dev'
+    else:
+        base_url = request.build_absolute_uri('/')[:-1]
+    return Response({
+        'users': base_url + reverse('user-list', request=request, format=format),
+        'teams': base_url + reverse('team-list', request=request, format=format),
+        'activities': base_url + reverse('activity-list', request=request, format=format),
+        'leaderboard': base_url + reverse('leaderboard-list', request=request, format=format),
+        'workouts': base_url + reverse('workout-list', request=request, format=format),
+    })
